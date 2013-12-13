@@ -1,0 +1,473 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" name="viewport" 
+        content="text/html; charset=utf-8" />
+        <title>Medieval Battle</title>
+        <link href="hero.css" rel="stylesheet" type="text/css"
+			media="screen and (min-width: 481px)" />
+		<link href="mobilehero.css" rel="stylesheet" type="text/css"
+        	media="only screen and (max-width: 480px)" />
+		<!--[if IE]>
+        <link rel="stylesheet" type="text/css" href="cyoa.css" media="all" />
+        <![endif]-->
+		<script type="text/javascript"
+            src = "simpleGame_1_0.js"></script>
+        <script type="text/javascript">
+            var game;
+            var hero;
+            var hero;
+            var villain;
+            var power = 1;
+            var health = 50;
+            var btnGuard;
+            var btnWar;
+            var btnWiz;
+            var btnOne;
+            var btnTwo;
+			var isSinglePlayer = true;
+			var isPlayerTwo = false;
+            
+            function Character(name, image){
+                //base character - subclass for hero and monster
+                tChar = new Sprite(game, image, 64, 64);
+                tChar.name = name;
+                
+                //change these stats to change performance
+                tChar.hitPerc = 100; // perc likelihood of hitting opponent
+                tChar.damage = 4;   // number of 6-sided dice to roll on a hit
+                tChar.attack = 4;
+                tChar.magic = 6;
+                tChar.defMod = 0;  // subtract from the opponent's hit perc
+                tChar.armor = 0;    // subtract from the opponent's damage
+                tChar.hp = 20;      // how much damage I can sustain
+                
+                tChar.showStats = function(){
+                    status = "<strong>" + this.name + "</strong> <br />"
+                    //status += "hitPerc: " + this.hitPerc + "<br />";
+                    status += "damage: " + this.damage + "<br />";
+                    status += "attack: " + this.attack + "<br />";
+                    status += "magic: " + this.magic + "<br />";
+                    //status += "def mod: " + this. defMod + "<br />";
+                    //status += "armor: " + this.armor + "<br />";
+                    status += "hp: " + this.hp
+                    
+                    return status;
+                } // end showStatus
+            
+                tChar.fight = function(enemy){
+                    //asumes enemy is also based on tChar
+                    hitPerc = (this.hitPerc - enemy.defMod) / 100;
+                    critical = .125;
+                    if (Math.random() < hitPerc){
+                        //alert("Hit!");
+                        damage = 0;
+                        for (i = 0; i < this.damage; i++){
+                            damage += parseInt(Math.random() * 6); 
+                        } // end for
+                        if (Math.random() < critical){
+                            //alert("Critical Hit!");
+                            damage *= 2;
+                        }
+        
+                        damage -= enemy.armor;
+                        enemy.hp -= damage;
+                        
+                        if (enemy.hp <= 0){
+                            /*if (enemy == villain){
+                                //enemy.grow();
+                                power++;
+                                health += 5;
+                            }
+                            else {
+                                //enemy.reset();
+                                power = 1;
+                                health = 50;
+                            }*/
+                            alert(enemy.name + " is dead!")
+                            document.location.href = "";
+                        } // end 'enemy dead' if
+                    } // end "hit" if
+            
+                } // end fight
+            
+                return tChar;
+            }  // end character
+                
+            function Wizard(){
+                tHero = new Character("Wizard", "wizard.jpg");
+                
+                //change these stats to change performance
+                tHero.hitPerc = 100; // perc likelihood of hitting opponent
+                tHero.damage = 4;   // number of 6-sided dice to roll on a hit
+                tHero.attack = 4;
+                tHero.magic = 6;
+                tHero.defMod = 0;  // subtract from the opponent's hit perc
+                tHero.armor = 0;    // subtract from the opponent's damage
+                tHero.hp = 20;      // how much damage I can sustain
+                
+                tHero.setSpeed(0);
+                tHero.setPosition(25, 100);
+                
+                return tHero;
+            } // end hero
+            
+            function Warrior(){
+                tHero = new Character("Warrior", "warrior.jpg");
+                
+                //change these stats to change performance
+                tHero.hitPerc = 100; // perc likelihood of hitting opponent
+                tHero.damage = 6;   // number of 6-sided dice to roll on a hit
+                tHero.attack = 6;
+                tHero.magic = 4;
+                tHero.defMod = 0;  // subtract from the opponent's hit perc
+                tHero.armor = 0;    // subtract from the opponent's damage
+                tHero.hp = 30;      // how much damage I can sustain
+                
+                tHero.setSpeed(0);
+                tHero.setPosition(25, 100);
+                
+                return tHero;
+            } // end hero
+            
+            function Guardian(){
+                tHero = new Character("Guardian", "knight.jpg");
+                
+                //change these stats to change performance
+                tHero.hitPerc = 100; // perc likelihood of hitting opponent
+                tHero.damage = 2;   // number of 6-sided dice to roll on a hit
+                tHero.attack = 2;
+                tHero.magic = 4;
+                tHero.defMod = 0;  // subtract from the opponent's hit perc
+                tHero.armor = 0;    // subtract from the opponent's damage
+                tHero.hp = 40;      // how much damage I can sustain
+                
+                tHero.setSpeed(0);
+                tHero.setPosition(25, 100);
+                
+                return tHero;
+            } // end hero
+            
+            function Orc(){
+                //if (btnOne.isClicked){
+                
+                tOrc = new Character("Orc", "orc.png");
+                
+                //villain is bigger than default but with weaker weapons
+                tOrc.hitPerc = 100; // perc likelihood of hitting opponent
+                tOrc.damage = power;   // damage (d6) done on a sucessful hit
+				tOrc.attack = power;
+				tOrc.magic = power;
+                tOrc.defMod = 0;   // subtract from opponent's hitPerc
+                tOrc.armor = 0;     // subtract from opponent's damage
+                tOrc.hp = health;      // amount of damage I can sustain
+                /*}
+                
+                if (btnTwo.isClicked){
+                    tOrc = new Character*/
+                   
+                tOrc.setSpeed(0);
+                
+                tOrc.setPosition(400, 100);
+                
+                return tOrc;
+            } // end villain
+            
+            function Weapon(){
+                /*tWeapon = new Sprite(game, "attack.png", 64, 64);
+                tWeapon.setSpeed(0);
+                tWeapon.setPosition(150, 100);
+                
+                tWeapon.checkClick = function(){
+                    if (this.isClicked()){*/
+                        hero.damage = hero.attack;
+						//villain.damage = villain.attack;
+                        fight();
+                    /*}
+                }
+                return tWeapon;*/
+            }
+            
+            function Wand(){
+                /*tWand = new Sprite(game, "magic.png", 64, 64);
+                tWand.setSpeed(0);
+                tWand.setPosition(275, 100);
+                
+                tWand.checkClick = function(){
+                    if (this.isClicked()){*/
+                        hero.damage = hero.magic;
+						//villain.damage = villain.magic;
+                        fight();
+                    /*}
+                }
+                return tWand;*/
+            }
+                
+            function fight(){
+                hero.fight(villain);
+                villain.fight(hero);
+                
+                oneStatus.innerHTML = hero.showStats();
+                twoStatus.innerHTML = villain.showStats();
+            } // end fight function
+            
+            function init(){
+                
+                game = new Scene();
+				game.setSize(465, 600);
+				game.setPos(0, 0);
+                /*weapon = new Weapon();
+                wand = new Wand();
+				hero = new Warrior();
+        		villain = new Orc();
+                */
+                /*btnOne = new GameButton("One Player");
+                btnOne.setPos(25, 25);
+                btnOne.setSize(95, 25);
+                btnTwo = new GameButton("Two Player");*/
+                //btnTwo.setPos(150, 25);
+                //btnTwo.setSize(95, 25);
+				
+				//alert("How many players?");
+                
+                oneStatus = document.getElementById("oneStatus");
+                twoStatus = document.getElementById("twoStatus");
+				single = document.getElementById("single");
+				double = document.getElementById("double");
+				guard = document.getElementById("guard");
+				war = document.getElementById("war");
+				wiz = document.getElementById("wiz");
+				att = document.getElementById("att");
+				mag = document.getElementById("mag");
+                
+                //alert("An enemy has appeared!");
+                
+                //oneStatus.innerHTML = hero.showStats();
+                //twoStatus.innerHTML = villain.showStats();
+                
+                game.start();
+            } // end init
+            
+           // function checkPlayer(){
+			function OnePlay() {
+				//alert("Choose your Character");
+                //if (btnOne.isClicked()){
+				isSinglePlayer = true;
+				single.disabled = true;
+				double.disabled = true;
+				guard.disabled = false;
+				war.disabled = false;
+				wiz.disabled = false;
+				/*btnGuard = new GameButton("Guardian: HP+, Att-");
+				btnWar = new GameButton("Warrior: Att+, Mag-");
+				btnWiz = new GameButton("Wizard: Mag+, HP-");
+				btnGuard.setPos(25, 100);
+				//btnGuard.setSize(90, 25);
+				btnWar.setPos(25, 130);
+				//btnWar.setSize(90, 25);
+				btnWiz.setPos(25, 160);
+				//btnWiz.setSize(90, 25);
+				btnOne.button.hidden = true;
+				btnTwo.button.hidden = true;*/
+			}
+				
+                //if (btnTwo.isClicked()){
+			function TwoPlay() {
+				isSinglePlayer = false;
+				single.disabled = true;
+				double.disabled = true;
+				guard.disabled = false;
+				war.disabled = false;
+				wiz.disabled = false;
+				/*btnGuard = new GameButton("Guardian: HP+, Att-");
+				btnWar = new GameButton("Warrior: Att+, Mag-");
+				btnWiz = new GameButton("Wizard: Mag+, HP-");
+				btnGuard.setPos(25, 100);
+				//btnGuard.setSize(90, 25);
+				btnWar.setPos(25, 130);
+				//btnWar.setSize(90, 25);
+				btnWiz.setPos(25, 160);
+				//btnWiz.setSize(90, 25);
+				btnOne.button.hidden = true;
+				btnTwo.button.hidden = true;*/
+				//alert("Player 1: Choose your Character");
+            }
+			//}
+			//function checkChar(){	
+				//if (btnGuard.isClicked()){
+			function GuardGame(){
+				//btnGuard.button.hidden = true;
+				guard.disabled = true;
+				if (isSinglePlayer == true)
+				{
+					war.disabled = true;
+					wiz.disabled = true;
+					att.disabled = false;
+					mag.disabled = false;
+					hero = new Guardian();
+					villain = new Orc();
+			
+					//alert("An enemy has appeared!");
+				
+					oneStatus.innerHTML = hero.showStats();
+					twoStatus.innerHTML = villain.showStats();
+				}
+					//weapon = new Weapon();
+					//wand = new Wand();
+					/*btnWar.button.hidden = true;
+					btnWiz.button.hidden = true;*/
+				} else if (isPlayerTwo == true) {
+					war.disabled = true;
+					wiz.disabled = true;
+					att.disabled = false;
+					mag.disabled = false;
+					villain = new Guardian();
+					villain.setPosition(400, 100);
+					
+					//alert("Duel begin!");
+				
+					//oneStatus.innerHTML = hero.showStats();
+					twoStatus.innerHTML = villain.showStats();
+					/*weapon = new Weapon();
+					wand = new Wand();
+					btnWar.button.hidden = true;
+					btnWiz.button.hidden = true;*/
+				} else {
+					hero = new Guardian();
+					oneStatus.innerHTML = hero.showStats();
+					isPlayerTwo = true;
+					//alert("Player 2: Choose your Character");
+				}
+			}
+				//if (btnWar.isClicked()){
+			function WarGame(){
+				war.disabled = true;
+				if (isSinglePlayer == true)
+				{
+					hero = new Warrior();
+					villain = new Orc();	
+					guard.disabled = true;
+					wiz.disabled = true;
+					att.disabled = false;
+					mag.disabled = false;
+					//alert("An enemy has appeared!");
+				
+					oneStatus.innerHTML = hero.showStats();
+					twoStatus.innerHTML = villain.showStats();
+					//weapon = new Weapon();
+					//wand = new Wand();
+					/*btnGuard.button.hidden = true;
+					btnWiz.button.hidden = true;*/
+				} else if (isPlayerTwo == true) {
+					villain = new Warrior();
+					villain.setPosition(400, 100);
+					guard.disabled = true;
+					wiz.disabled = true;
+					att.disabled = false;
+					mag.disabled = false;
+					
+					//alert("Duel begin!");
+				
+					//oneStatus.innerHTML = hero.showStats();
+					twoStatus.innerHTML = villain.showStats();
+					/*weapon = new Weapon();
+					wand = new Wand();
+					btnGuard.button.hidden = true;
+					btnWiz.button.hidden = true;*/
+				} else {
+					hero = new Warrior();
+					oneStatus.innerHTML = hero.showStats();
+					isPlayerTwo = true;
+					//alert("Player 2: Choose your Character");
+				}
+				//btnWar.button.hidden = true;
+			}
+				//if (btnWiz.isClicked()){
+					
+			function WizGame(){
+				wiz.disabled = true;
+				if (isSinglePlayer == true) {
+					hero = new Wizard();
+					villain = new Orc();
+					//weapon = new Weapon();
+					//wand = new Wand();
+					guard.disabled = true;
+					war.disabled = true;
+					att.disabled = false;
+					mag.disabled = false;
+					//alert("An enemy has appeared!");
+				
+					oneStatus.innerHTML = hero.showStats();
+					twoStatus.innerHTML = villain.showStats();
+					
+					/*btnGuard.button.hidden = true;
+					btnWar.button.hidden = true;*/
+				} else if (isPlayerTwo == true) {
+					guard.disabled = true;
+					war.disabled = true;
+					att.disabled = false;
+					mag.disabled = false;
+					villain = new Wizard();
+					villain.setPosition(400, 100);
+					
+					//alert("Duel begin!");
+				
+					//oneStatus.innerHTML = hero.showStats();
+					twoStatus.innerHTML = villain.showStats();
+					/*weapon = new Weapon();
+					wand = new Wand();
+					btnGuard.button.hidden = true;
+					btnWar.button.hidden = true;*/
+				} else {
+					hero = new Wizard();
+					oneStatus.innerHTML = hero.showStats();
+					isPlayerTwo = true;
+					//alert("Player 2: Choose your Character");
+				}
+					//btnWiz.button.hidden = true;
+				//}
+				/*weapon.checkClick();
+                wand.checkClick();
+				
+                hero.update();
+                villain.update();
+				weapon.update();
+                wand.update();*/
+            }
+			
+			function update(){
+                game.clear();
+				//checkPlayer();
+				//checkChar();
+				//weapon.checkClick();
+                //wand.checkClick();
+				
+                hero.update();
+                villain.update();
+				weapon.update();
+                wand.update();
+				
+            } // end update
+        </script>
+    </head>
+    
+    <body onload = "init()">
+    	<form>
+        	<fieldset>
+            	<input type = "button" id="single" value="One Player" onclick="OnePlay()" />
+                <input type = "button" id="double" value="Two Player" onclick="TwoPlay()" />
+            </fieldset>
+            <fieldset>
+                <input type = "button" id="guard" value="Guardian: HP+, Att-" onclick="GuardGame()" disabled="disabled" />
+                <input type = "button" id="war" value="Warrior: Att+, Mag-" onclick="WarGame()" disabled="disabled" />
+                <input type = "button" id="wiz" value="Wizard: Mag+, HP-" onclick="WizGame()" disabled="disabled" />
+            </fieldset>
+            <fieldset>
+                <input type="button" id="att" value="Attack" onclick="Weapon()" disabled="disabled" />
+                <input type="button" id="mag" value="Magic" onclick="Wand()" disabled="disabled" />
+            </fieldset>
+        </form>
+        <div id = "oneStatus"></div>
+        <div id = "twoStatus"></div>
+    </body>
+</html>
